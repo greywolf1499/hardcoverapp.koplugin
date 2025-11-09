@@ -1,6 +1,7 @@
-local https = require("ssl.https")
+local http = require("socket.http")
 local json = require("json")
 local ltn12 = require("ltn12")
+local T = require("ffi/util").template
 
 local VERSION = require("hardcover_version")
 
@@ -10,10 +11,16 @@ local Github = {}
 
 function Github:newestRelease()
   local responseBody = {}
-  local res, code, responseHeaders = https.request {
+  local request = {
     url = RELEASE_API,
     sink = ltn12.sink.table(responseBody),
+    headers = {
+      ["User-Agent"] = T("hardcoverapp.koplugin/%1 (https://github.com/billiam/hardcoverapp.koplugin)",
+        table.concat(VERSION, "."))
+    }
   }
+
+  local code, resp_headers, status = socket.skip(1, http.request(request))
 
   if code == 200 or code == 304 then
     local data = json.decode(table.concat(responseBody), json.decode.simple)
