@@ -1,6 +1,6 @@
 local config = require("hardcover_config")
 local logger = require("logger")
-local https = require("ssl.https")
+local http = require("socket.http")
 local ltn12 = require("ltn12")
 local json = require("json")
 local _t = require("hardcover/lib/table_util")
@@ -8,6 +8,7 @@ local T = require("ffi/util").template
 local Trapper = require("ui/trapper")
 local NetworkManager = require("ui/network/manager")
 local socketutil = require("socketutil")
+local socket = require("socket")
 
 local Book = require("hardcover/lib/book")
 local VERSION = require("hardcover_version")
@@ -152,7 +153,10 @@ function HardcoverApi:_query(query, parameters)
     sink = socketutil.table_sink(sink),
   }
 
-  local _, code, _headers, _status = https.request(request)
+    -- Use socket.http with socket.skip like OPDS plugin does.
+  -- This is more robust and compatible with KOReader's network setup (e.g. proxies).
+  logger.dbg("Request:", socketutil.redact_request(request))
+  local code, resp_headers, status = socket.skip(1, http.request(request))
   socketutil:reset_timeout()
 
   local content = table.concat(sink) -- empty or content accumulated till now
