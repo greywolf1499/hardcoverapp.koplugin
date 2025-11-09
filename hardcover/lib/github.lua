@@ -2,6 +2,7 @@ local http = require("socket.http")
 local json = require("json")
 local ltn12 = require("ltn12")
 local T = require("ffi/util").template
+local socket = require("socket")
 
 local VERSION = require("hardcover_version")
 
